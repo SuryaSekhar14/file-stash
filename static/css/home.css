@@ -3,8 +3,14 @@ body {
     flex-direction: column;
     justify-content: center;
     align-items: center; */
+    /* background-color: #181a1b; */
     background-color: white;
     padding: 10px;
+
+}
+
+p {
+    color: black;
 
 }
 

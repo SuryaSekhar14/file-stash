@@ -69,18 +69,16 @@ def home():
 
 @app.route('/getFile', methods=['GET'])
 def getFile():
-    filename = request.query_string.decode("utf-8").split("=")[1]
+    asAttachment = request.args.get('download')
+    filename = request.args.get('q')
 
     if filename in os.listdir('cache'):
         print("File found in local storage")
-        # retFile = open(f'cache/{filename}', 'rb')
-        # return send_file(retFile, download_name=filename)
-        return send_from_directory('cache', filename, download_name=filename), 200
+        return send_from_directory('cache', filename, download_name=filename, as_attachment=asAttachment), 200
     else:
         try:
             print("File not found in local storage, downloading from S3")
             s3.download_file(bucket_name, filename, 'cache/' + filename)
-            # retFile = open(f'cache/{filename}', 'rb')
             return send_from_directory('cache', filename, download_name=filename)
         except Exception as e:
             print(e)
