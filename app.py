@@ -60,7 +60,6 @@ def list_files_in_bucket(bucket_name):
 @app.route('/')
 def home():
     filesList = []
-    fileExts = (".txt", ".md", ".pdf", ".docx", ".xlsx", ".pptx", ".jpg", ".png", ".jpeg", ".csv", ".xlsx", ".zip", ".rar")
 
     filesList = list_files_in_bucket(bucket_name)
 
@@ -90,7 +89,7 @@ def getFile():
 @app.route('/upload-file', methods=['POST'])
 def upload_file():
     file_name = request.files['file'].filename
-    fileExts = (".txt", ".md", ".pdf", ".docx", ".xlsx", ".pptx", ".jpg", ".png", ".jpeg", ".csv", ".xlsx", ".zip", ".rar")
+    fileExts = (".txt", ".md", ".pdf", ".docx", ".xlsx", ".gif", ".pptx", ".jpg", ".png", ".jpeg", ".csv", ".xlsx", ".zip", ".rar")
 
     if file_name.endswith(fileExts):
         try:
