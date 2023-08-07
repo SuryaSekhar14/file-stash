@@ -1,0 +1,4 @@
+boto3==1.28.20
+Flask==2.0.2
+python-dotenv==1.0.0
+
