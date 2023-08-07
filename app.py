@@ -96,6 +96,7 @@ def upload_file():
             #Check if file size is more than 20mb and return error if it is
             if int(request.headers['Content-Length']) > 20000000:
                 return "File size too large", 413, {'ContentType':'text/html'}
+            
             print("Size of File Uploaded: " + str(request.headers['Content-Length']))
             s3.upload_fileobj(request.files['file'], bucket_name, file_name)
             return redirect(url_for('home'))
