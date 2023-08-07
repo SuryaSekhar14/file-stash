@@ -110,11 +110,12 @@ def upload_file():
 def delete_file():
     try:
         filename = request.form['filename']
-        print("Filename: " + filename)
-        s3.delete_object(Bucket=bucket_name, Key=filename)
+        print("Deleting file: " + filename)
+        # s3.delete_object(Bucket=bucket_name, Key=filename)
         return redirect(url_for('home'))
     except Exception as e:
         print(e)
         return "Error in deleting file", 500, {'ContentType':'text/html'}
 
-app.run(debug=True)
+
+app.run(port=5000, debug=True)
