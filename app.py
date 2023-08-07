@@ -69,8 +69,10 @@ def home():
 
 @app.route('/getFile', methods=['GET'])
 def getFile():
+    print(request.args)
     asAttachment = request.args.get('download')
     filename = request.args.get('q')
+    print("Filename: " + filename + " asAttachment: " + str(asAttachment))
 
     if filename in os.listdir('cache'):
         print("File found in local storage")
