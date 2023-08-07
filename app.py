@@ -81,7 +81,7 @@ def getFile():
         try:
             print("File not found in local storage, downloading from S3")
             s3.download_file(bucket_name, filename, 'cache/' + filename)
-            return send_from_directory('cache', filename, download_name=filename)
+            return send_from_directory('cache', filename, download_name=filename, as_attachment=asAttachment), 200
         except Exception as e:
             print(e)
             return "Error in getting file", 404, {'ContentType':'text/html'}
