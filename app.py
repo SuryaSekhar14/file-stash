@@ -30,9 +30,6 @@ def list_files_in_bucket(bucket_name):
         # print(response)
 
         if 'Contents' in response:
-            # files = [obj['Key'] for obj in response['Contents']]
-            # return files
-
             #If 'Content' in responsse, return an array of dict, where each file would be numbered incrementally, where each dict contains name of the file, last motified date and size of the file
             files = []
             for obj in response['Contents']:
@@ -65,23 +62,10 @@ def home():
     filesList = []
     fileExts = (".txt", ".md", ".pdf", ".docx", ".xlsx", ".pptx", ".jpg", ".png", ".jpeg", ".csv", ".xlsx", ".zip", ".rar")
 
-    # session = boto3.Session(
-    #                 aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
-    #                 aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY')
-    # )
-
-    # s3 = session.resource('s3')
-    # my_bucket = s3.Bucket(bucket_name)
-
-    # for file in my_bucket.objects.all():
-    #     # print(file)
-    #     print(list_files_in_bucket(bucket_name))
-    #     if file.key.endswith(fileExts):
-    #         filesList.append(file.key)
-
     filesList = list_files_in_bucket(bucket_name)
 
     return render_template('home.html', filesList = filesList)
+
 
 @app.route('/getFile', methods=['GET'])
 def getFile():
