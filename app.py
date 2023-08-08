@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, sen
 import os
 import boto3
 import dotenv
+import logging
 
 # Load environment variables
 dotenv.load_dotenv()
@@ -19,11 +20,15 @@ try:
 except Exception as e:
     print(e)
 
-
+# Create cache folder if not already created
 if not os.path.exists('cache'):
     os.makedirs('cache')
 
 
+# logging.basicConfig(filename='app.log', filemode='w+', format='%(name)s - %(levelname)s - %(message)s')
+
+
+# List all files in the bucket
 def list_files_in_bucket(bucket_name):
     try:
         response = s3.list_objects_v2(Bucket=bucket_name)
@@ -96,7 +101,7 @@ def upload_file():
             #Check if file size is more than 20mb and return error if it is
             if int(request.headers['Content-Length']) > 20000000:
                 return "File size too large", 413, {'ContentType':'text/html'}
-            
+
             print("Size of File Uploaded: " + str(request.headers['Content-Length']))
             s3.upload_fileobj(request.files['file'], bucket_name, file_name)
             return redirect(url_for('home'))
@@ -119,4 +124,4 @@ def delete_file():
         return "Error in deleting file", 500, {'ContentType':'text/html'}
 
 
-app.run(port=5000, debug=True)
+app.run(port=8000, debug=False)
