@@ -3,91 +3,50 @@ import os
 import boto3
 import dotenv
 import logging
+import utils
 
-# Load environment variables
-dotenv.load_dotenv()
+
+#Create logger
+logging.basicConfig(filename='app.log', filemode='w+', format='%(name)s - %(levelname)-8s - %(message)s')
+logger = logging.getLogger("app")
+logger.setLevel(logging.INFO)
+
 
 #Define app
-app = Flask(__name__)
+app = Flask("File Stash")
 
-# Create an S3 client
-try:
-    bucket_name = os.environ.get('BUCKET_NAME')
-    s3 = boto3.client('s3', aws_access_key_id=os.environ.get('AWS_ACCESS_KEY_ID'),
-                        aws_secret_access_key=os.environ.get('AWS_SECRET_ACCESS_KEY')
-    )
-    print("S3 client created")
-except Exception as e:
-    print(e)
 
 # Create cache folder if not already created
 if not os.path.exists('cache'):
+    logger.warning("Cache folder not found, creating one")
     os.makedirs('cache')
 
 
-# logging.basicConfig(filename='app.log', filemode='w+', format='%(name)s - %(levelname)s - %(message)s')
-
-
-# List all files in the bucket
-def list_files_in_bucket(bucket_name):
-    try:
-        response = s3.list_objects_v2(Bucket=bucket_name)
-        # print(response)
-
-        if 'Contents' in response:
-            #If 'Content' in responsse, return an array of dict, where each file would be numbered incrementally, where each dict contains name of the file, last motified date and size of the file
-            files = []
-            for obj in response['Contents']:
-                #If the size is less than 1 mb, represent it in KB, else in MB else if smaller than 1kb, in bytes
-                if obj['Size'] < 1000:
-                    size = str(obj['Size']) + ' bytes'
-                elif obj['Size'] < 1000000:
-                    size = str(round(obj['Size']/1000, 2)) + ' KB'
-                else:
-                    size = str(round(obj['Size']/1000000, 2)) + ' MB'
-
-                files.append({
-                    'id': len(files) + 1, #Incremental id
-                    'name': obj['Key'],
-                    'last_modified': str(obj['LastModified']).split(' ')[0],
-                    'size': size
-                })
-            return files
-
-        else:
-            print("No objects found in the bucket.")
-            return []
-    except Exception as e:
-        print("Error:", str(e))
-        return []
-    
-
-@app.route('/')
+@app.route('/', methods=['GET'])
 def home():
     filesList = []
+    filesList = utils.list_files_in_bucket()
 
-    filesList = list_files_in_bucket(bucket_name)
-
+    logger.info("Rendering home page")
     return render_template('home.html', filesList = filesList)
 
 
-@app.route('/getFile', methods=['GET'])
+@app.route('/getfile', methods=['GET'])
 def getFile():
-    print(request.args)
     asAttachment = request.args.get('download')
     filename = request.args.get('q')
-    print("Filename: " + filename + " asAttachment: " + str(asAttachment))
+    logger.info("Filename: " + filename + " asAttachment: " + str(asAttachment))
 
     if filename in os.listdir('cache'):
-        print("File found in local storage")
+        logger.info("File found in local storage")
         return send_from_directory('cache', filename, download_name=filename, as_attachment=asAttachment), 200
     else:
         try:
-            print("File not found in local storage, downloading from S3")
-            s3.download_file(bucket_name, filename, 'cache/' + filename)
+            logger.info("File not found in local storage, downloading from S3")
+            utils.download_file_from_s3(filename)
             return send_from_directory('cache', filename, download_name=filename, as_attachment=asAttachment), 200
         except Exception as e:
-            print(e)
+            logger.error("Error:" + str(e))
             return "Error in getting file", 404, {'ContentType':'text/html'}
 
 
@@ -100,15 +59,17 @@ def upload_file():
         try:
             #Check if file size is more than 20mb and return error if it is
             if int(request.headers['Content-Length']) > 20000000:
+                logger.warning("File size too large")
                 return "File size too large", 413, {'ContentType':'text/html'}
 
-            print("Size of File Uploaded: " + str(request.headers['Content-Length']))
-            s3.upload_fileobj(request.files['file'], bucket_name, file_name)
+            logger.info("Size of File Uploaded: " + str(request.headers['Content-Length']))
+            utils.upload_file_to_s3(request.files['file'], file_name)
             return redirect(url_for('home'))
         except Exception as e:
-            print(e)
+            logger.error("Error in uploading file:" + str(e))
             return "Error in uploading file", 500, {'ContentType':'text/html'}
     else:
+        logger.warning("Invalid file type")
         return "Invalid file type", 406, {'ContentType':'text/html'}
     
 
@@ -116,15 +77,14 @@ def upload_file():
 def delete_file():
     try:
         filename = request.form['filename']
-        print("Deleting file: " + filename)
+        logger.info("Deleting file: " + filename)
         # s3.delete_object(Bucket=bucket_name, Key=filename)
         return redirect(url_for('home'))
     except Exception as e:
-        print(e)
+        logger.error("Error deleting file: " + str(e))
         return "Error in deleting file", 500, {'ContentType':'text/html'}
 
 
-
-
-
-app.run(port=8000, debug=False)
+if __name__ == '__main__':
+    logger.info("Starting app")
+    app.run(port=8000, debug=False)

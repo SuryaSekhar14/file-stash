@@ -65,7 +65,7 @@
                 <td>{{file.last_modified}}</td>
                 <td>{{file.size}}</td>
                 <td>
-                    <a href="/getFile?q={{file.name}}">
+                    <a href="/getfile?q={{file.name}}">
                         Download
                     </a>
                 </td>
@@ -73,7 +73,7 @@
                     <button 
                         id="copyButton" 
                         style="border: 0px transparent; background-color: transparent;" 
-                        onclick="copyToClipboard('storage.suryasekhardatta.com/getFile?q={{file.name}}')"
+                        onclick="copyToClipboard('storage.suryasekhardatta.com/getfile?q={{file.name}}')"
                         data-toggle="popover" data-trigger="focus" data-content="Copied!"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
