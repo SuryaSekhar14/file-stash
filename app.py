@@ -3,11 +3,11 @@ import os
 import boto3
 import dotenv
 import logging
-import utils
+from . import utils
 
 
 #Create logger
-logging.basicConfig(filename='app.log', filemode='w+', format='%(name)s - %(levelname)-8s - %(message)s')
+logging.basicConfig(filename='app.log', filemode='w+', format='%(name)s - %(asctime)s - %(levelname)-8s - %(message)s')
 logger = logging.getLogger("app")
 logger.setLevel(logging.INFO)
 
@@ -86,5 +86,5 @@ def delete_file():
 
 
 if __name__ == '__main__':
-    logger.info("Starting app")
+    logger.info("Starting app")3
     app.run(port=8000, debug=False)
