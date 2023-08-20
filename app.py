@@ -3,7 +3,7 @@ import os
 import boto3
 import dotenv
 import logging
-from . import utils
+import utils
 
 
 #Create logger
@@ -85,6 +85,12 @@ def delete_file():
         return "Error in deleting file", 500, {'ContentType':'text/html'}
 
 
+@app.errorhandler(404)
+def page_not_found(e):
+    logger.warning("Page not found")
+    return render_template('404.html'), 404
+
+
 if __name__ == '__main__':
-    logger.info("Starting app")3
+    logger.info("Starting app")
     app.run(port=8000, debug=False)
