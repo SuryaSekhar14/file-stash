@@ -22,6 +22,15 @@ if not os.path.exists('cache'):
     os.makedirs('cache')
 
 
+@app.route('/pyscript', methods=['GET'])
+def pyscript():
+    try:
+        return render_template('pyscript.html')
+    except Exception as e:
+        logger.error("Error in rendering pyscript page: " + str(e))
+        return "Error in rendering pyscript page", 500, {'ContentType':'text/html'}
+
+
 @app.route('/', methods=['GET'])
 def home():
     filesList = []
