@@ -4,6 +4,7 @@ cache/
 .DS_Store
 
 config.yaml
+index.json
 
 __pycache__/
 */__pycache__/
