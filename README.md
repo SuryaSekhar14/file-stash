@@ -11,6 +11,7 @@ _Note:  All files auto-delete 30 days after uplading them_
 ### Ideas
 
 - [ ] Make APIs service for file uploads and downloads.
+- [X] File listing from Cache to limit bucket hits
 - [ ] Same file name collision problem solve
 - [ ] Rate limit the API with API Keys (auth required)
 - [ ] Every file has unique UUIDs as S3 primary key
