@@ -34,7 +34,8 @@ def pyscript():
 @app.route('/', methods=['GET'])
 def home():
     filesList = []
-    filesList = utils.list_files_in_bucket()
+    # filesList = utils.list_files_in_bucket()
+    filesList = utils.list_files_from_cache()
 
     logger.info("Rendering home page")
     return render_template('home.html', filesList = filesList)
@@ -71,8 +72,10 @@ def upload_file():
                 logger.warning("File size too large")
                 return "File size too large", 413, {'ContentType':'text/html'}
 
-            logger.info("Size of File Uploaded: " + str(request.headers['Content-Length']))
+            logger.info("Size of File Uploading: " + str(request.headers['Content-Length']))
+
             utils.upload_file_to_s3(request.files['file'], file_name)
+
             return redirect(url_for('home'))
         except Exception as e:
             logger.error("Error in uploading file:" + str(e))
@@ -102,4 +105,21 @@ def page_not_found(e):
 
 if __name__ == '__main__':
     logger.info("Starting app")
-    app.run(port=8000, debug=False)
+
+    #Hygiene check
+    if not os.path.exists('.env'):
+        logger.error("Environment file not found")
+        raise Exception("Environment file not found")
+    else:
+        logger.info("Environment file found")
+
+    #Load environment variables
+    dotenv.load_dotenv()
+
+    #Re-build cache
+    # os.remove('cache')
+    # os.makedirs('cache')
+    utils.build_cache()
+
+
+    app.run(port = 8000, debug = os.environ.get('DEBUG') == 'True')

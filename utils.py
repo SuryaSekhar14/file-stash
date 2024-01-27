@@ -3,7 +3,7 @@ import dotenv
 import os 
 import logging
 
-logging.basicConfig(filename='app.log', filemode='a+', format='%(name)s - %(levelname)-8s - %(message)s')
+logging.basicConfig(filename='app.log', filemode='a+', format='%(name)s - %(asctime)s - %(levelname)-8s - %(message)s')
 logger = logging.getLogger("utils")
 logger.setLevel(logging.INFO)
 
@@ -44,7 +44,7 @@ def list_files_in_bucket():
                     'last_modified': str(obj['LastModified']).split(' ')[0],
                     'size': size
                 })
-            logger.info("Files returned successfully")
+            logger.info("Files returned from Bucket successfully")
             return files
         else:
             logger.warning("No objects found in the bucket.")
@@ -56,13 +56,55 @@ def list_files_in_bucket():
 
 def download_file_from_s3(filename):
     s3.download_file(bucket_name, filename, 'cache/' + filename)
-    logger.info("File downloaded from S3")
+    logger.info(f"File '{filename}' downloaded from S3")
     return 
 
 
 def upload_file_to_s3(file_obj, file_name):
-    s3.upload_fileobj(file_obj, bucket_name, file_name)
+    # s3.upload_fileobj(file_obj, bucket_name, file_name)
+
+    #Store to cache
+    file_obj.save('cache/' + file_name)
+
+    #Upload to S3
+    with open('cache/' + file_name, 'rb') as f:
+        s3.upload_fileobj(f, bucket_name, file_name)
+
     logger.info("File uploaded to S3")
     return 
 
 
+def list_files_from_cache():
+    try:
+        files = []
+        for file in os.listdir('cache'):
+            files.append({
+                'id': len(files) + 1,
+                'name': file,
+                'last_modified': str(os.path.getmtime('cache/' + file)).split(' ')[0],
+                'size': str(round(os.path.getsize('cache/' + file)/1000000, 2)) + ' MB'
+            })
+        logger.info("Files returned from Cache successfully")
+        return files
+    except Exception as e:
+        logger.error("Error: " + str(e))
+        return []
+    
+
+def build_cache():
+    try:
+        files = list_files_in_bucket()
+        for file in files:
+            download_file_from_s3(file['name'])
+        logger.info("Cache built successfully")
+        return True
+    except Exception as e:
+        logger.error("Error in Building Cache: " + str(e))
+
+        #Delete cache folder
+        try: 
+            os.remove('cache/') 
+        except: 
+            pass
+
+        return False
