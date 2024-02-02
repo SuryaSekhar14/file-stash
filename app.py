@@ -16,12 +16,6 @@ logger.setLevel(logging.INFO)
 app = Flask("File Stash")
 
 
-# Create cache folder if not already created
-if not os.path.exists('cache'):
-    logger.warning("Cache folder not found, creating one")
-    os.makedirs('cache')
-
-
 @app.route('/pyscript', methods=['GET'])
 def pyscript():
     try:
@@ -35,7 +29,8 @@ def pyscript():
 def home():
     filesList = []
     # filesList = utils.list_files_in_bucket()
-    filesList = utils.list_files_from_cache()
+    # filesList = utils.list_files_from_cache()
+    filesList = utils.list_files_from_json()
 
     logger.info("Rendering home page")
     return render_template('home.html', filesList = filesList)
@@ -106,20 +101,20 @@ def page_not_found(e):
 if __name__ == '__main__':
     logger.info("Starting app")
 
+    # Create cache folder if not already created
+    if not os.path.exists('cache'):
+        logger.warning("Cache folder not found, creating one")
+        os.makedirs('cache')
+
     #Hygiene check
     if not os.path.exists('.env'):
         logger.error("Environment file not found")
         raise Exception("Environment file not found")
     else:
         logger.info("Environment file found")
-
-    #Load environment variables
-    dotenv.load_dotenv()
+        dotenv.load_dotenv()
 
     #Re-build cache
-    # os.remove('cache')
-    # os.makedirs('cache')
     utils.build_cache()
-
 
     app.run(port = 8000, debug = os.environ.get('DEBUG') == 'True')
