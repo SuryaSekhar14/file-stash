@@ -72,7 +72,7 @@ def upload_file():
 
             logger.info("Size of File Uploading: " + str(request.headers['Content-Length']))
 
-            utils.save_to_cache_only(request.files['file'], file_name)
+            utils.save_to_cache_only(request.files['file'])
 
             return redirect(url_for('home'))
         except Exception as e:

@@ -55,6 +55,7 @@
             <th scope="col">File Size</th>
             <th scope="col"></th>
             <th scope="col"></th>
+            <th scope="col"></th>
           </tr>
         </thead>
         <tbody>
@@ -64,8 +65,17 @@
                 <td id="copyTarget">{{file.name}}</td>
                 <td>{{file.last_modified}}</td>
                 <td>{{file.size}}</td>
+                {% if file.name.endswith(('.zip', '.rar', '.xlsx', '.csv', '.pptx')) %}
+                    <td></td>
+                {% else %}
+                    <td>
+                        <a href="/getfile?q={{file.name}}">
+                            View
+                        </a>
+                    </td>
+                {% endif %}
                 <td>
-                    <a href="/getfile?q={{file.name}}">
+                    <a href="/getfile?q={{file.name}}&download=1">
                         Download
                     </a>
                 </td>
