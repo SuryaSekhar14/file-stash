@@ -1,9 +1,0 @@
-#Write an App Engine yaml config file
-
-runtime: python39
-
-handlers:
-- url: /.*
-  script: auto
-
-

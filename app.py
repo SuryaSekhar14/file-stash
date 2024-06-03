@@ -1,22 +1,20 @@
 from flask import Flask, render_template, request, redirect, url_for, flash, send_file, send_from_directory
 import os
-import boto3
 import dotenv
 import logging
-import utils
 
 
 #Create logger
 logging.basicConfig(filename='app.log', filemode='w+', format='%(name)s - %(asctime)s - %(levelname)-8s - %(message)s')
 logger = logging.getLogger("app")
-logger.setLevel(logging.INFO)
+logger.setLevel(logging.DEBUG)
 
 
 #Define app
 app = Flask("File Stash")
 
 
-@app.route('/pyscript', methods=['GET'])
+@app.route('/pyscript-test', methods=['GET'])
 def pyscript():
     try:
         return render_template('pyscript.html')
@@ -25,12 +23,17 @@ def pyscript():
         return "Error in rendering pyscript page", 500, {'ContentType':'text/html'}
 
 
+@app.route('/health', methods=['GET'])
+def health():
+    return "Healthy", 200, {'ContentType':'text/html'}
+
+
 @app.route('/', methods=['GET'])
 def home():
     filesList = []
     # filesList = utils.list_files_in_bucket()
-    # filesList = utils.list_files_from_cache()
-    filesList = utils.list_files_from_json()
+    filesList = utils.list_files_from_cache()
+    # filesList = utils.list_files_from_json()
 
     logger.info("Rendering home page")
     return render_template('home.html', filesList = filesList)
@@ -48,8 +51,8 @@ def getFile():
     else:
         try:
             logger.info("File not found in local storage, downloading from S3")
-            utils.download_file_from_s3(filename)
-            return send_from_directory('cache', filename, download_name=filename, as_attachment=asAttachment), 200
+            # utils.download_file_from_s3(filename)
+            # return send_from_directory('cache', filename, download_name=filename, as_attachment=asAttachment), 200
         except Exception as e:
             logger.error("Error:" + str(e))
             return "Error in getting file", 404, {'ContentType':'text/html'}
@@ -69,7 +72,7 @@ def upload_file():
 
             logger.info("Size of File Uploading: " + str(request.headers['Content-Length']))
 
-            utils.upload_file_to_s3(request.files['file'], file_name)
+            utils.save_to_cache_only(request.files['file'], file_name)
 
             return redirect(url_for('home'))
         except Exception as e:
@@ -108,13 +111,23 @@ if __name__ == '__main__':
 
     #Hygiene check
     if not os.path.exists('.env'):
-        logger.error("Environment file not found")
-        raise Exception("Environment file not found")
+        logger.error("Environment file not found. Exiting...")
+        raise Exception("Environment file not found. Exiting...")
     else:
-        logger.info("Environment file found")
+        logger.info("Environment file found.")
         dotenv.load_dotenv()
 
-    #Re-build cache
-    utils.build_cache()
+    if os.path.exists('index.json'):
+        logger.info("Index file found")
+    else:
+        logger.warning("Index file not found, creating one")
+        with open('index.json', 'w') as f:
+            f.write('[]')
 
-    app.run(port = 8000, debug = os.environ.get('DEBUG') == 'True')
+    #Re-build cache
+    import utils
+    # utils.build_cache()
+
+    logger.info(f"Starting app at port {os.environ.get('PORT')}...")
+
+    app.run(host='0.0.0.0', port=os.environ.get('PORT'), debug = os.environ.get('DEBUG') == 'True')
