@@ -35,7 +35,7 @@ def home():
     filesList = utils.list_files_from_cache()
     # filesList = utils.list_files_from_json()
 
-    logger.info("Rendering home page")
+    logger.info(f"Rendering home page for IP: {request.remote_addr}")
     return render_template('home.html', filesList = filesList)
 
 
