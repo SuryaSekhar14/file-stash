@@ -31,9 +31,7 @@ def health():
 @app.route('/', methods=['GET'])
 def home():
     filesList = []
-    # filesList = utils.list_files_in_bucket()
-    filesList = utils.list_files_from_cache()
-    # filesList = utils.list_files_from_json()
+    filesList = utils.list_all_blobs()
 
     logger.info(f"Rendering home page for IP: {request.remote_addr}")
     return render_template('home.html', filesList = filesList)
@@ -130,4 +128,4 @@ if __name__ == '__main__':
 
     logger.info(f"Starting app at port {os.environ.get('PORT')}...")
 
-    app.run(host='0.0.0.0', port=os.environ.get('PORT'), debug = os.environ.get('DEBUG') == 'True')
+    app.run(host='0.0.0.0', port=os.environ.get('PORT'), debug = os.environ.get('DEBUG'))
