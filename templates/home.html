@@ -62,20 +62,20 @@
         {% for file in filesList %}
             <tr>
                 <th scope="row">{{file.id}}</th>
-                <td id="copyTarget">{{file.name}}</td>
-                <td>{{file.last_modified}}</td>
+                <td id="copyTarget">{{file.filename}}</td>
+                <td>{{file.uploadedAt}}</td>
                 <td>{{file.size}}</td>
-                {% if file.name.endswith(('.zip', '.rar', '.xlsx', '.csv', '.pptx')) %}
+                <!-- {% if file.filename.endswith(('.zip', '.rar', '.xlsx', '.csv', '.pptx')) %}
                     <td></td>
                 {% else %}
                     <td>
-                        <a href="/getfile?q={{file.name}}">
+                        <a href="/getfile?q={{file.filename}}">
                             View
                         </a>
                     </td>
-                {% endif %}
+                {% endif %} -->
                 <td>
-                    <a href="/getfile?q={{file.name}}&download=1">
+                    <a href="/getfile?q={{file.filename}}&download=1">
                         Download
                     </a>
                 </td>
@@ -83,7 +83,7 @@
                     <button 
                         id="copyButton" 
                         style="border: 0px transparent; background-color: transparent;" 
-                        onclick="copyToClipboard('storage.suryasekhardatta.com/getfile?q={{file.name}}')"
+                        onclick="copyToClipboard('storage.suryasekhardatta.com/getfile?q={{file.filename}}')"
                         data-toggle="popover" data-trigger="focus" data-content="Copied!"
                     >
                         <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" fill="currentColor" class="bi bi-clipboard" viewBox="0 0 16 16">
@@ -98,7 +98,7 @@
     </table>
 
     <footer>
-        <p> <b>Disclaimer:</b> This is a temporary file storage. All files will be auto-deleted after 30 days. </p>
+        <p> <b>Disclaimer:</b> This is a temporary file storage. Files are identified by filename, so the new file with the same name overwrites the old one. Why? Because I did not have time to make unique keys for the files. Might look into that later tho. Enjoy! </p>
     </footer>
 </body>
 </html>

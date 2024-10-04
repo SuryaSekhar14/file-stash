@@ -14,15 +14,6 @@ logger.setLevel(logging.DEBUG)
 app = Flask("File Stash")
 
 
-@app.route('/pyscript-test', methods=['GET'])
-def pyscript():
-    try:
-        return render_template('pyscript.html')
-    except Exception as e:
-        logger.error("Error in rendering pyscript page: " + str(e))
-        return "Error in rendering pyscript page", 500, {'ContentType':'text/html'}
-
-
 @app.route('/health', methods=['GET'])
 def health():
     return "Healthy", 200, {'ContentType':'text/html'}
@@ -32,6 +23,7 @@ def health():
 def home():
     filesList = []
     filesList = utils.list_all_blobs()
+    # print(filesList)
 
     logger.info(f"Rendering home page for IP: {request.remote_addr}")
     return render_template('home.html', filesList = filesList)
@@ -70,11 +62,11 @@ def upload_file():
 
             logger.info("Size of File Uploading: " + str(request.headers['Content-Length']))
 
-            utils.save_to_cache_only(request.files['file'])
+            utils.upload_file(request.files['file'])
 
             return redirect(url_for('home'))
         except Exception as e:
-            logger.error("Error in uploading file:" + str(e))
+            logger.error("Error in uploading file: " + str(e))
             return "Error in uploading file", 500, {'ContentType':'text/html'}
     else:
         logger.warning("Invalid file type")
@@ -107,25 +99,26 @@ if __name__ == '__main__':
         logger.warning("Cache folder not found, creating one")
         os.makedirs('cache')
 
-    #Hygiene check
-    if not os.path.exists('.env'):
-        logger.error("Environment file not found. Exiting...")
-        raise Exception("Environment file not found. Exiting...")
-    else:
+    # Hygiene check
+    if os.path.exists('.env'):
         logger.info("Environment file found.")
         dotenv.load_dotenv()
-
-    if os.path.exists('index.json'):
-        logger.info("Index file found")
     else:
-        logger.warning("Index file not found, creating one")
-        with open('index.json', 'w') as f:
-            f.write('[]')
+        logger.error("Environment file not found. Exiting...")
+        raise Exception("Environment file not found. Exiting...")
+        
+
+    # if os.path.exists('index.json'):
+    #     logger.info("Index file found")
+    # else:
+    #     logger.warning("Index file not found, creating one")
+    #     with open('index.json', 'w') as f:
+    #         f.write('[]')
 
     #Re-build cache
     import utils
     # utils.build_cache()
 
-    logger.info(f"Starting app at port {os.environ.get('PORT')}...")
+    logger.info(f"Starting app at port {os.environ.get('FLASK_PORT')}...")
 
-    app.run(host='0.0.0.0', port=os.environ.get('PORT'), debug = os.environ.get('DEBUG'))
+    app.run(host='0.0.0.0', port=os.environ.get('FLASK_PORT'), debug = os.environ.get('FLASK_DEBUG') == 'True')
