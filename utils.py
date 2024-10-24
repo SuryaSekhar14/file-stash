@@ -11,14 +11,14 @@ logger = logging.getLogger("utils")
 logger.setLevel(logging.INFO)
 
 
-def convert_timestamp_to_date(timestamp_str):
+def _convert_timestamp_to_date(timestamp_str):
     timestamp = int(timestamp_str)
     time_struct = time.gmtime(timestamp)
     formatted_date = time.strftime('%d-%m-%Y', time_struct)
     return formatted_date
 
 
-def iso_to_ddmmyy(iso_timestamp: str) -> str:
+def _iso_to_ddmmyy(iso_timestamp: str) -> str:
     # Parse the ISO timestamp
     dt_obj = datetime.strptime(iso_timestamp, "%Y-%m-%dT%H:%M:%S.%fZ")
     
@@ -31,18 +31,23 @@ def list_all_blobs():
     List all blobs in the Blob storage
     '''
     hasMore = True
+    resp_blob = []
     blobs = []
 
     while hasMore == True:
         resp = vercel_blob.list()
-        blobs.extend(resp.get('blobs'))
+        resp_blob.extend(resp.get('blobs'))
         hasMore = resp.get('hasMore')
         # pprint.pprint(resp)
+
+    for blob in resp_blob:
+        if blob.get('pathname').startswith('cache/'):
+            blobs.append(blob)
 
     for i, blob in enumerate(blobs):
         blob['id'] = i + 1
         blob['filename'] = blob.get('contentDisposition').split('filename=')[1].replace('"', '')
-        blob['uploadedAt'] = iso_to_ddmmyy(blob.get('uploadedAt'))
+        blob['uploadedAt'] = _iso_to_ddmmyy(blob.get('uploadedAt'))
 
         blob_size = blob.get('size', 0)
         if blob_size < 1024:
@@ -53,6 +58,8 @@ def list_all_blobs():
             blob['size'] = f"{blob_size / (1024 * 1024):.2f} MB"
 
     pprint.pprint(blobs)
+    with open('blobs.json', 'w') as f:
+        json.dump(blobs, f)
 
     # Download blobs to cache
     for blob in blobs:
@@ -64,6 +71,20 @@ def list_all_blobs():
             logger.info(f"{filename} already exists in cache")
 
     return blobs
+
+
+def get_all_blobs_from_cache():
+    '''
+    Get all blobs from blobs.json
+    '''
+    blobs = []
+
+    if os.path.exists('blobs.json'):
+        with open('blobs.json', 'r') as f:
+            blobs = json.load(f)
+
+    return blobs
+
 
 
 def upload_file(file):

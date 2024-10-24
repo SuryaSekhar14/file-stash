@@ -2,6 +2,7 @@ from flask import Flask, render_template, request, redirect, url_for, flash, sen
 import os
 import dotenv
 import logging
+import time
 
 
 #Create logger
@@ -14,6 +15,9 @@ logger.setLevel(logging.DEBUG)
 app = Flask("File Stash")
 
 
+_LAST_REFRESH = None
+
+
 @app.route('/health', methods=['GET'])
 def health():
     return "Healthy", 200, {'ContentType':'text/html'}
@@ -21,9 +25,16 @@ def health():
 
 @app.route('/', methods=['GET'])
 def home():
+    global _LAST_REFRESH
     filesList = []
-    filesList = utils.list_all_blobs()
-    # print(filesList)
+
+    if _LAST_REFRESH is None or time.time() - _LAST_REFRESH > 300:
+        logger.info("Refreshing cache")
+        filesList = utils.list_all_blobs()
+        _LAST_REFRESH = time.time()
+    else:
+        logger.info("Getting files from cache")
+        filesList = utils.get_all_blobs_from_cache()
 
     logger.info(f"Rendering home page for IP: {request.remote_addr}")
     return render_template('home.html', filesList = filesList)

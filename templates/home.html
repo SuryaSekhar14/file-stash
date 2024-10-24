@@ -65,7 +65,7 @@
                 <td id="copyTarget">{{file.filename}}</td>
                 <td>{{file.uploadedAt}}</td>
                 <td>{{file.size}}</td>
-                <!-- {% if file.filename.endswith(('.zip', '.rar', '.xlsx', '.csv', '.pptx')) %}
+                {% if file.filename.endswith(('.zip', '.rar', '.xlsx', '.csv', '.pptx')) %}
                     <td></td>
                 {% else %}
                     <td>
@@ -73,7 +73,7 @@
                             View
                         </a>
                     </td>
-                {% endif %} -->
+                {% endif %}
                 <td>
                     <a href="/getfile?q={{file.filename}}&download=1">
                         Download
@@ -98,7 +98,7 @@
     </table>
 
     <footer>
-        <p> <b>Disclaimer:</b> This is a temporary file storage. Files are identified by filename, so the new file with the same name overwrites the old one. Why? Because I did not have time to make unique keys for the files. Might look into that later tho. Enjoy! </p>
+        <p> <b>Disclaimer:</b> This is a temporary file storage. Files are identified by filename, so the new file with the same name overwrites the old one. Why? Because I did not have time to make unique keys for the files. Enjoy! </p>
     </footer>
 </body>
 </html>
