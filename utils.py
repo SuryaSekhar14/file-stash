@@ -85,5 +85,3 @@ def upload_file(file):
 
     return True
 
-
-def 

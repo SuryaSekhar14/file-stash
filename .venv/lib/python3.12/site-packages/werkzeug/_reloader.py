@@ -1,3 +1,5 @@
+from __future__ import annotations
+
 import fnmatch
 import os
 import subprocess
@@ -20,7 +22,7 @@ prefix = {*_ignore_always, sys.prefix, sys.exec_prefix}
 
 if hasattr(sys, "real_prefix"):
     # virtualenv < 20
-    prefix.add(sys.real_prefix)  # type: ignore[attr-defined]
+    prefix.add(sys.real_prefix)
 
 _stat_ignore_scan = tuple(prefix)
 del prefix
@@ -55,13 +57,13 @@ def _iter_module_paths() -> t.Iterator[str]:
             yield name
 
 
-def _remove_by_pattern(paths: t.Set[str], exclude_patterns: t.Set[str]) -> None:
+def _remove_by_pattern(paths: set[str], exclude_patterns: set[str]) -> None:
     for pattern in exclude_patterns:
         paths.difference_update(fnmatch.filter(paths, pattern))
 
 
 def _find_stat_paths(
-    extra_files: t.Set[str], exclude_patterns: t.Set[str]
+    extra_files: set[str], exclude_patterns: set[str]
 ) -> t.Iterable[str]:
     """Find paths for the stat reloader to watch. Returns imported
     module files, Python files under non-system paths. Extra files and
@@ -115,7 +117,7 @@ def _find_stat_paths(
 
 
 def _find_watchdog_paths(
-    extra_files: t.Set[str], exclude_patterns: t.Set[str]
+    extra_files: set[str], exclude_patterns: set[str]
 ) -> t.Iterable[str]:
     """Find paths for the stat reloader to watch. Looks at the same
     sources as the stat reloader, but watches everything under
@@ -139,7 +141,7 @@ def _find_watchdog_paths(
 
 
 def _find_common_roots(paths: t.Iterable[str]) -> t.Iterable[str]:
-    root: t.Dict[str, dict] = {}
+    root: dict[str, dict[str, t.Any]] = {}
 
     for chunks in sorted((PurePath(x).parts for x in paths), key=len, reverse=True):
         node = root
@@ -151,21 +153,28 @@ def _find_common_roots(paths: t.Iterable[str]) -> t.Iterable[str]:
 
     rv = set()
 
-    def _walk(node: t.Mapping[str, dict], path: t.Tuple[str, ...]) -> None:
+    def _walk(node: t.Mapping[str, dict[str, t.Any]], path: tuple[str, ...]) -> None:
         for prefix, child in node.items():
             _walk(child, path + (prefix,))
 
-        if not node:
+        # If there are no more nodes, and a path has been accumulated, add it.
+        # Path may be empty if the "" entry is in sys.path.
+        if not node and path:
             rv.add(os.path.join(*path))
 
     _walk(root, ())
     return rv
 
 
-def _get_args_for_reloading() -> t.List[str]:
+def _get_args_for_reloading() -> list[str]:
     """Determine how the script was executed, and return the args needed
     to execute it again in a new process.
     """
+    if sys.version_info >= (3, 10):
+        # sys.orig_argv, added in Python 3.10, contains the exact args used to invoke
+        # Python. Still replace argv[0] with sys.executable for accuracy.
+        return [sys.executable, *sys.orig_argv[1:]]
+
     rv = [sys.executable]
     py_script = sys.argv[0]
     args = sys.argv[1:]
@@ -221,15 +230,15 @@ class ReloaderLoop:
 
     def __init__(
         self,
-        extra_files: t.Optional[t.Iterable[str]] = None,
-        exclude_patterns: t.Optional[t.Iterable[str]] = None,
-        interval: t.Union[int, float] = 1,
+        extra_files: t.Iterable[str] | None = None,
+        exclude_patterns: t.Iterable[str] | None = None,
+        interval: int | float = 1,
     ) -> None:
-        self.extra_files: t.Set[str] = {os.path.abspath(x) for x in extra_files or ()}
-        self.exclude_patterns: t.Set[str] = set(exclude_patterns or ())
+        self.extra_files: set[str] = {os.path.abspath(x) for x in extra_files or ()}
+        self.exclude_patterns: set[str] = set(exclude_patterns or ())
         self.interval = interval
 
-    def __enter__(self) -> "ReloaderLoop":
+    def __enter__(self) -> ReloaderLoop:
         """Do any setup, then run one step of the watch to populate the
         initial filesystem state.
         """
@@ -281,7 +290,7 @@ class StatReloaderLoop(ReloaderLoop):
     name = "stat"
 
     def __enter__(self) -> ReloaderLoop:
-        self.mtimes: t.Dict[str, float] = {}
+        self.mtimes: dict[str, float] = {}
         return super().__enter__()
 
     def run_step(self) -> None:
@@ -303,17 +312,22 @@ class StatReloaderLoop(ReloaderLoop):
 
 class WatchdogReloaderLoop(ReloaderLoop):
     def __init__(self, *args: t.Any, **kwargs: t.Any) -> None:
-        from watchdog.observers import Observer
+        from watchdog.events import EVENT_TYPE_OPENED
+        from watchdog.events import FileModifiedEvent
         from watchdog.events import PatternMatchingEventHandler
+        from watchdog.observers import Observer
 
         super().__init__(*args, **kwargs)
         trigger_reload = self.trigger_reload
 
-        class EventHandler(PatternMatchingEventHandler):  # type: ignore
-            def on_any_event(self, event):  # type: ignore
+        class EventHandler(PatternMatchingEventHandler):
+            def on_any_event(self, event: FileModifiedEvent):  # type: ignore
+                if event.event_type == EVENT_TYPE_OPENED:
+                    return
+
                 trigger_reload(event.src_path)
 
-        reloader_name = Observer.__name__.lower()
+        reloader_name = Observer.__name__.lower()  # type: ignore[attr-defined]
 
         if reloader_name.endswith("observer"):
             reloader_name = reloader_name[:-8]
@@ -326,7 +340,7 @@ class WatchdogReloaderLoop(ReloaderLoop):
         # the source file (or initial pyc file) as well. Ignore Git and
         # Mercurial internal changes.
         extra_patterns = [p for p in self.extra_files if not os.path.isdir(p)]
-        self.event_handler = EventHandler(
+        self.event_handler = EventHandler(  # type: ignore[no-untyped-call]
             patterns=["*.py", "*.pyc", "*.zip", *extra_patterns],
             ignore_patterns=[
                 *[f"*/{d}/*" for d in _ignore_common_dirs],
@@ -343,12 +357,12 @@ class WatchdogReloaderLoop(ReloaderLoop):
         self.log_reload(filename)
 
     def __enter__(self) -> ReloaderLoop:
-        self.watches: t.Dict[str, t.Any] = {}
-        self.observer.start()
+        self.watches: dict[str, t.Any] = {}
+        self.observer.start()  # type: ignore[no-untyped-call]
         return super().__enter__()
 
     def __exit__(self, exc_type, exc_val, exc_tb):  # type: ignore
-        self.observer.stop()
+        self.observer.stop()  # type: ignore[no-untyped-call]
         self.observer.join()
 
     def run(self) -> None:
@@ -364,7 +378,7 @@ class WatchdogReloaderLoop(ReloaderLoop):
         for path in _find_watchdog_paths(self.extra_files, self.exclude_patterns):
             if path not in self.watches:
                 try:
-                    self.watches[path] = self.observer.schedule(
+                    self.watches[path] = self.observer.schedule(  # type: ignore[no-untyped-call]
                         self.event_handler, path, recursive=True
                     )
                 except OSError:
@@ -379,10 +393,10 @@ class WatchdogReloaderLoop(ReloaderLoop):
             watch = self.watches.pop(path, None)
 
             if watch is not None:
-                self.observer.unschedule(watch)
+                self.observer.unschedule(watch)  # type: ignore[no-untyped-call]
 
 
-reloader_loops: t.Dict[str, t.Type[ReloaderLoop]] = {
+reloader_loops: dict[str, type[ReloaderLoop]] = {
     "stat": StatReloaderLoop,
     "watchdog": WatchdogReloaderLoop,
 }
@@ -416,9 +430,9 @@ def ensure_echo_on() -> None:
 
 def run_with_reloader(
     main_func: t.Callable[[], None],
-    extra_files: t.Optional[t.Iterable[str]] = None,
-    exclude_patterns: t.Optional[t.Iterable[str]] = None,
-    interval: t.Union[int, float] = 1,
+    extra_files: t.Iterable[str] | None = None,
+    exclude_patterns: t.Iterable[str] | None = None,
+    interval: int | float = 1,
     reloader_type: str = "auto",
 ) -> None:
     """Run the given function in an independent Python interpreter."""
