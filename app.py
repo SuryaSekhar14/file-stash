@@ -16,8 +16,7 @@ app = Flask("File Stash")
 
 
 _LAST_REFRESH = None
-#vercel change
-#main change
+
 
 @app.route('/health', methods=['GET'])
 def health():
@@ -76,6 +75,8 @@ def upload_file():
 
             utils.upload_file(request.files['file'])
 
+            utils.refresh_cache()
+
             return redirect(url_for('home'))
         except Exception as e:
             logger.error("Error in uploading file: " + str(e))
@@ -118,14 +119,7 @@ if __name__ == '__main__':
     else:
         logger.error("Environment file not found. Exiting...")
         raise Exception("Environment file not found. Exiting...")
-        
 
-    # if os.path.exists('index.json'):
-    #     logger.info("Index file found")
-    # else:
-    #     logger.warning("Index file not found, creating one")
-    #     with open('index.json', 'w') as f:
-    #         f.write('[]')
 
     #Re-build cache
     import utils

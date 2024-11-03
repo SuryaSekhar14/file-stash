@@ -6,6 +6,7 @@ import time
 from datetime import datetime
 import pprint
 
+
 logging.basicConfig(filename='app.log', filemode='a+', format='%(name)s - %(asctime)s - %(levelname)-8s - %(message)s')
 logger = logging.getLogger("utils")
 logger.setLevel(logging.INFO)
@@ -86,7 +87,6 @@ def get_all_blobs_from_cache():
     return blobs
 
 
-
 def upload_file(file):
     '''
     Upload a file to the Blob storage
@@ -106,3 +106,19 @@ def upload_file(file):
 
     return True
 
+
+def delete_blob(url):
+    '''
+    Delete a blob from the Blob storage
+    '''
+    logger.info(f"Deleting blob: {url}")
+    vercel_blob.delete(url)
+    return True
+
+def refresh_cache():
+    '''
+    Refresh the cache
+    '''
+    logger.info("Refreshing cache")
+    list_all_blobs()
+    return True
