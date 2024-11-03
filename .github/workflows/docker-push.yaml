@@ -27,5 +27,6 @@ jobs:
         with:
           context: .
           push: true
+          platforms: linux/arm/v7,linux/arm64,linux/arm64/v8
           tags: ${{ secrets.DOCKER_USERNAME }}/file-stash:latest
           # tags: ${{ secrets.DOCKER_USERNAME }}/file-stash:${{ github.sha }}
