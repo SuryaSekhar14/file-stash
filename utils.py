@@ -67,7 +67,7 @@ def list_all_blobs():
         filename = blob.get('filename')
         if filename not in os.listdir('cache'):
             logger.info(f"Downloading {filename} from Vercel Blob")
-            vercel_blob.download_file(blob.get('url'), f'cache/{filename}/')
+            vercel_blob.download_file(blob.get('url'), f'cache/')
         else:
             logger.info(f"{filename} already exists in cache")
 
