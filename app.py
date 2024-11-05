@@ -9,7 +9,7 @@ import time
 logging.basicConfig(filename='app.log', filemode='w+', format='%(name)s - %(asctime)s - %(levelname)-8s - %(message)s')
 logger = logging.getLogger("app")
 logger.setLevel(logging.DEBUG)
-
+ 
 
 _LAST_REFRESH = None
 app = Flask("File Stash")
