@@ -11,32 +11,11 @@ logger = logging.getLogger("app")
 logger.setLevel(logging.DEBUG)
 
 
-_LAST_REFRESH = None
+#Define app
 app = Flask("File Stash")
 
 
-def initialize_app():
-    global utils
-    logger.info("Starting app")
-
-    # Create cache folder if not already created
-    if not os.path.exists('cache'):
-        logger.warning("Cache folder not found, creating one")
-        os.makedirs('cache')
-
-    # Hygiene check
-    if os.path.exists('.env'):
-        logger.info("Environment file found.")
-        dotenv.load_dotenv()
-    else:
-        logger.error("Environment file not found. Exiting...")
-        raise Exception("Environment file not found. Exiting...")
-
-    #Re-build cache
-    import utils
-    # utils.build_cache()
-
-    logger.info(f"Starting app at port {os.environ.get('FLASK_PORT')}...")
+_LAST_REFRESH = None
 
 
 @app.route('/health', methods=['GET'])
@@ -125,30 +104,27 @@ def page_not_found(e):
     return render_template('404.html'), 404
 
 
-initialize_app()
+if __name__ == '__main__':
+    logger.info("Starting app")
+
+    # Create cache folder if not already created
+    if not os.path.exists('cache'):
+        logger.warning("Cache folder not found, creating one")
+        os.makedirs('cache')
+
+    # Hygiene check
+    if os.path.exists('.env'):
+        logger.info("Environment file found.")
+        dotenv.load_dotenv()
+    else:
+        logger.error("Environment file not found. Exiting...")
+        raise Exception("Environment file not found. Exiting...")
 
 
-# if __name__ == '__main__':
-#     logger.info("Starting app")
+    #Re-build cache
+    import utils
+    # utils.build_cache()
 
-#     # Create cache folder if not already created
-#     if not os.path.exists('cache'):
-#         logger.warning("Cache folder not found, creating one")
-#         os.makedirs('cache')
+    logger.info(f"Starting app at port {os.environ.get('FLASK_PORT')}...")
 
-#     # Hygiene check
-#     if os.path.exists('.env'):
-#         logger.info("Environment file found.")
-#         dotenv.load_dotenv()
-#     else:
-#         logger.error("Environment file not found. Exiting...")
-#         raise Exception("Environment file not found. Exiting...")
-
-
-#     #Re-build cache
-#     import utils
-#     # utils.build_cache()
-
-#     logger.info(f"Starting app at port {os.environ.get('FLASK_PORT')}...")
-
-#     app.run(host='0.0.0.0', port=os.environ.get('FLASK_PORT'), debug = os.environ.get('FLASK_DEBUG') == 'True')
+    app.run(host='0.0.0.0', port=os.environ.get('FLASK_PORT'), debug = os.environ.get('FLASK_DEBUG') == 'True')
