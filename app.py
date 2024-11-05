@@ -11,11 +11,8 @@ logger = logging.getLogger("app")
 logger.setLevel(logging.DEBUG)
 
 
-#Define app
-app = Flask("File Stash")
-
-
 _LAST_REFRESH = None
+app = Flask("File Stash")
 
 
 @app.route('/health', methods=['GET'])
