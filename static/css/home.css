@@ -1,27 +1,9 @@
 body {
-    /* display: flex;
-    flex-direction: column;
-    justify-content: center;
-    align-items: center; */
-    /* background-color: #181a1b; */
     background-color: white;
-    padding: 10px;
-
 }
 
 p {
     color: black;
-}
-
-a {
-    display: flex;
-    flex-direction: column;
-    /* align-items: center; */
-    /* justify-content; */
-    /* border: black solid 1px; */
-    /* padding: 10px; */
-    margin-left: 25%;
-    margin-right: 25%;
 }
 
 footer {
