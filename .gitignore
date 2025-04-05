@@ -12,3 +12,5 @@ app.log
 node_modules
 
 blobs.json
+venv/
+.venv/
